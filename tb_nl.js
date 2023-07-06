@@ -1,9 +1,11 @@
-const VERSION = 'V7'
-
 if (!auto.service) {
     toast('无障碍服务未启动！退出！')
     exit()
 }
+
+
+// alert('请把手机放稳，不要摇晃！', '不然有时候会跳出合伙赢喵币，导致任务阻塞')
+
 function getSetting() {
     let indices = []
     autoOpen && indices.push(0)
@@ -139,12 +141,13 @@ try {
             // click(random(right,left), random(top, bottom))
             click(c.bounds().centerX(), c.bounds().centerY())
             console.log('已点击，等待任务列表出现')
-            if (!idContains('node_2_icon').findOne(8000)) {
+            if (!textContains('task_detail').findOne(8000)) {
                 throw '无法打开任务列表'
             }
         }
     }
 
+    // TODO:
     // 查找任务按钮
     function findTask() {
         var jumpButtonFind = textMatches(/去浏览|去完成/) // 找进入任务的按钮，10秒
@@ -180,6 +183,7 @@ try {
         return null
     }
 
+    // TODO:
     function liulan() {
         // if (textMatches(/.*浏览.*/).findOne(10000)) { // 等待浏览出现
         //     let v = className('android.support.v7.widget.RecyclerView').findOnce() // 滑动
@@ -191,10 +195,11 @@ try {
 
         // textMatches(/.*浏览得奖励.*/).findOne(15000) // 等待开始
         let finish_c = 0
-        while (finish_c < 50) { // 0.5 * 50 = 25 秒，防止死循环
+        while (finish_c < 60) { // 0.5 * 60 =30 秒，防止死循环
             if (textMatches(/.*下拉浏览.*/).exists() || textContains('下滑').exists()) {
                 console.log('进行模拟滑动')
                 swipe(device.width / 2, device.height - 200, device.width / 2 + 20, device.height - 500, 2000)
+                continue
             }
             let finish_reg = /.*任务已完成[\s\S]*|.*失败.*|.*上限.*|.*开小差.*/
             if (textMatches(finish_reg).exists() || descMatches(finish_reg).exists()) { // 等待已完成出现，有可能失败
@@ -210,11 +215,16 @@ try {
                 console.log('跳过互动任务')
                 break
             }
+            if (finish_c % 5 == 0) {
+                console.log('滑动防止页面卡顿')
+                swipe( device.width / 2, device.height - 400, device.width / 2 + 20, device.height - 500, 500)
+                // finish_c = finish_c + 5
+            }
             sleep(500)
             finish_c++
         }
 
-        if (finish_c > 49) {
+        if (finish_c > 59) {
             console.log('未检测到任务完成标识。返回。')
             return false
         }
@@ -223,6 +233,7 @@ try {
         return true
     }
 
+    // TODO:
     function backToList() {
         console.log('返回上级')
         back()
@@ -237,17 +248,16 @@ try {
     if (autoOpen) {
         // 打开淘宝活动页面
         console.log('正在打开淘宝...')
-        var url = 'm.tb.cn/h.U9Wkkoc'
 
         app.startActivity({
             action: "VIEW",
-            data: "taobao://" + url
+            data: "taobao://s.click.taobao.com/FS8zAGu"
         })
         sleep(2000)
 
         console.log('等待页面加载...')
     } else {
-        console.log('请在30秒内打开淘宝做任务赢红包活动页 08￥ CZ0001 rqkPd4bbrVA￥ https://m.tb.cn/h.U9Wkkoc')
+        console.log('请在30秒内打开淘宝做任务赢红包活动页 88￥ CZ3457 ekQIdp0kJjm￥ https://m.tb.cn/h.UxaRSaD  ')
     }
     if (!idContains('node_2_icon').findOne(30000)) {
         console.log('未能检测到任务页，退出')
@@ -335,7 +345,7 @@ try {
                 sleep(2000)
                 buttons[i].click()
                 console.log('等待加载')
-                if (findTextDescMatchesTimeout(/加入购物车.*|粉丝福利购/,10000) || currentActivity() == 'com.taobao.android.detail.wrapper.activity.DetailActivity') {
+                if (textMatches(/加入购物车|粉丝福利购/).findOne(10000) || currentActivity() == 'com.taobao.android.detail.wrapper.activity.DetailActivity') {
                     console.log('商品打开成功，返回')
                     back()
                     if (!textContains('超红精选热卖').findOne(10000)) {
@@ -350,7 +360,10 @@ try {
             backToList()
         } else if (jumpButton[0].match(/搜索/)) {
             jumpButton[1].click()
-            let listView = className('android.widget.ListView').findOne(8000).child(0)
+            console.log('等待搜索')
+            sleep(2000)
+            textContains('搜索发现').findOne(8000)
+            let listView = className('android.widget.ListView').findOne(2000).child(0)
             if (listView.childCount() == 1) {
                 listView.child(0).click()
             } else {
